@@ -544,7 +544,11 @@
                 }
             }
 
-            if (!moved) return false;
+            if (!moved) {
+                clearTimeout(animationTimeout);
+                isAnimating = false;
+                return false;
+            }
 
             // Animate: move all tiles to new positions
             for (let row = 0; row < 4; row++) {
