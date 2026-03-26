@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  2048-game:
+    build: .
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./scores.json:/app/scores.json
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
