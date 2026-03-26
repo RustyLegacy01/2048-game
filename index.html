@@ -365,41 +365,32 @@
         </div>
     </div>
     <script>
-        // Game state
-        let board = [];
+        // Game state - board is source of truth
+        let board = []; // 4x4 array of {value, tileId} or null
         let score = 0;
         let bestScore = localStorage.getItem('bestScore') || 0;
         let hasWon = false;
-        let tileIdCounter = 0;
+        let nextTileId = 0;
         
-        // Tile representation: {id, value, row, col, isNew, willMerge, mergedFrom}
-        // mergedFrom is array of tile IDs that merged into this one
-        let tiles = [];
-        
-        // DOM element cache
-        let tileElements = new Map();
-        
-        // Animation tracking
-        let isAnimating = false;
-        let pendingScore = null;
+        // Tile elements in DOM - keyed by tileId
+        let tileElements = {};
 
         document.getElementById('best-score').textContent = bestScore;
         loadLeaderboard();
 
         function initBoard() {
-            board = Array(4).fill(null).map(() => Array(4).fill(0));
+            board = Array(4).fill(null).map(() => Array(4).fill(null));
             score = 0;
             hasWon = false;
-            tileIdCounter = 0;
-            tiles = [];
+            nextTileId = 0;
             updateScore();
             hideOverlay();
-            clearTileContainer();
+            clearTiles();
         }
 
-        function clearTileContainer() {
+        function clearTiles() {
             document.getElementById('tile-container').innerHTML = '';
-            tileElements.clear();
+            tileElements = {};
         }
 
         function updateScore() {
@@ -415,219 +406,215 @@
             return { x: col * 110, y: row * 110 };
         }
 
-        function createTileElement(tile) {
+        function createTileElement(tileId, value, row, col, isNew) {
             const el = document.createElement('div');
-            el.className = `tile tile-${tile.value}`;
-            if (tile.isNew) el.classList.add('new');
-            if (tile.mergedFrom && tile.mergedFrom.length > 0) el.classList.add('merged');
-            el.textContent = tile.value;
-            el.id = `tile-${tile.id}`;
-            const pos = getTilePosition(tile.row, tile.col);
+            el.className = `tile tile-${value}`;
+            if (isNew) el.classList.add('new');
+            el.textContent = value;
+            el.id = `tile-${tileId}`;
+            const pos = getTilePosition(row, col);
             el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+            document.getElementById('tile-container').appendChild(el);
+            if (isNew) {
+                setTimeout(() => el.classList.remove('new'), 200);
+            }
             return el;
         }
 
-        function updateTilePosition(tile, el) {
-            const pos = getTilePosition(tile.row, tile.col);
+        function updateTilePosition(el, row, col) {
+            const pos = getTilePosition(row, col);
             el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
         }
 
-        function updateTileAppearance(tile, el) {
-            el.className = `tile tile-${tile.value}`;
-            if (tile.value === 2048) el.classList.add('pulse');
-            el.textContent = tile.value;
-        }
-
-        // Render all tiles - creates new elements only for new tiles
-        function renderTiles() {
-            const container = document.getElementById('tile-container');
-            
-            tiles.forEach(tile => {
-                let el = tileElements.get(tile.id);
-                if (!el) {
-                    // Create new element for new tiles
-                    el = createTileElement(tile);
-                    container.appendChild(el);
-                    tileElements.set(tile.id, el);
-                    if (tile.isNew) {
-                        setTimeout(() => el.classList.remove('new'), 200);
-                    }
-                    if (tile.mergedFrom && tile.mergedFrom.length > 0) {
-                        setTimeout(() => el.classList.remove('merged'), 200);
-                    }
-                }
-                // Update position for all tiles (with CSS transition)
-                updateTilePosition(tile, el);
-                updateTileAppearance(tile, el);
-            });
-        }
-
-        // Remove tiles that have been merged (after animation)
-        function removeMergedTiles(mergedTileIds) {
-            mergedTileIds.forEach(id => {
-                const el = tileElements.get(id);
-                if (el) {
-                    el.classList.add('removing');
-                    setTimeout(() => {
-                        if (el.parentNode) el.parentNode.removeChild(el);
-                    }, 150);
-                    tileElements.delete(id);
-                }
-            });
+        function spawnTile(row, col, value) {
+            const tileId = nextTileId++;
+            board[row][col] = { value, tileId };
+            tileElements[tileId] = createTileElement(tileId, value, row, col, true);
         }
 
         function addRandomTile() {
             const emptyCells = [];
             for (let row = 0; row < 4; row++) {
                 for (let col = 0; col < 4; col++) {
-                    if (board[row][col] === 0) emptyCells.push({row, col});
+                    if (!board[row][col]) emptyCells.push({row, col});
                 }
             }
             if (emptyCells.length > 0) {
                 const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 const value = Math.random() < 0.9 ? 2 : 4;
-                board[cell.row][cell.col] = value;
-                tiles.push({
-                    id: tileIdCounter++,
-                    value: value,
-                    row: cell.row,
-                    col: cell.col,
-                    isNew: true,
-                    mergedFrom: null
-                });
+                spawnTile(cell.row, cell.col, value);
             }
         }
 
-        // Core move logic
-        function move(direction) {
-            if (isAnimating) return false;
+        // Move a line and return move info for animation
+        function processLine(cells) {
+            // cells is array of {row, col, value, tileId}
+            const nonEmpty = cells.filter(c => c.value !== 0);
+            const result = [];
+            const merges = []; // {targetId, sourceId, newValue}
+            let scoreAdd = 0;
             
-            const mergedTileIds = [];
-            const newTiles = [];
+            for (let i = 0; i < nonEmpty.length; i++) {
+                if (i < nonEmpty.length - 1 && nonEmpty[i].value === nonEmpty[i+1].value) {
+                    // Merge
+                    const newValue = nonEmpty[i].value * 2;
+                    result.push({
+                        row: nonEmpty[i].row,
+                        col: nonEmpty[i].col,
+                        value: newValue,
+                        tileId: nonEmpty[i].tileId,
+                        merged: true
+                    });
+                    merges.push({
+                        targetId: nonEmpty[i].tileId,
+                        sourceId: nonEmpty[i+1].tileId,
+                        newValue: newValue,
+                        toRow: nonEmpty[i].row,
+                        toCol: nonEmpty[i].col
+                    });
+                    scoreAdd += newValue;
+                    i++;
+                } else {
+                    result.push(nonEmpty[i]);
+                }
+            }
+            
+            return { result, merges, scoreAdd };
+        }
+
+        function move(direction) {
+            const newBoard = Array(4).fill(null).map(() => Array(4).fill(null));
+            const allMerges = [];
             let moved = false;
+            let scoreAdd = 0;
 
-            // Helper to get row/col based on direction
-            const getPos = (line, pos) => {
-                if (direction === 'left') return { row: line, col: pos };
-                if (direction === 'right') return { row: line, col: 3 - pos };
-                if (direction === 'up') return { row: pos, col: line };
-                return { row: 3 - pos, col: line };
-            };
-
-            // Process each line
-            for (let line = 0; line < 4; line++) {
-                // Collect tiles in this line (in order of movement)
-                const lineTiles = [];
-                for (let pos = 0; pos < 4; pos++) {
-                    const { row, col } = getPos(line, pos);
-                    if (board[row][col] !== 0) {
-                        const tile = tiles.find(t => t.row === row && t.col === col);
-                        if (tile) lineTiles.push(tile);
-                    }
-                }
-
-                // Process merges and movement
-                const processedTiles = [];
-                let writePos = 0;
-                
-                for (let i = 0; i < lineTiles.length; i++) {
-                    const tile = lineTiles[i];
+            for (let i = 0; i < 4; i++) {
+                // Build line based on direction
+                const line = [];
+                for (let j = 0; j < 4; j++) {
+                    let row, col;
+                    if (direction === 'left') { row = i; col = j; }
+                    else if (direction === 'right') { row = i; col = 3-j; }
+                    else if (direction === 'up') { row = j; col = i; }
+                    else { row = 3-j; col = i; }
                     
-                    // Check if can merge with next
-                    if (i < lineTiles.length - 1 && lineTiles[i + 1].value === tile.value) {
-                        const nextTile = lineTiles[i + 1];
-                        const mergedValue = tile.value * 2;
-                        const newPos = getPos(line, writePos);
-                        
-                        // Create merged tile
-                        processedTiles.push({
-                            id: tile.id, // Keep first tile's ID
-                            value: mergedValue,
-                            row: newPos.row,
-                            col: newPos.col,
-                            isNew: false,
-                            mergedFrom: [nextTile.id] // Track what merged into this
-                        });
-                        
-                        mergedTileIds.push(nextTile.id); // Mark second tile for removal
-                        score += mergedValue;
-                        if (mergedValue === 2048 && !hasWon) {
-                            hasWon = true;
-                            setTimeout(showWin, 300);
-                        }
-                        
-                        i++; // Skip next tile
-                        writePos++;
-                        moved = true;
-                    } else {
-                        // Just move this tile
-                        const newPos = getPos(line, writePos);
-                        if (tile.row !== newPos.row || tile.col !== newPos.col) {
-                            moved = true;
-                        }
-                        processedTiles.push({
-                            ...tile,
-                            row: newPos.row,
-                            col: newPos.col,
-                            isNew: false,
-                            mergedFrom: null
-                        });
-                        writePos++;
+                    const cell = board[row][col];
+                    line.push({
+                        row, col,
+                        value: cell ? cell.value : 0,
+                        tileId: cell ? cell.tileId : null
+                    });
+                }
+
+                const { result, merges, scoreAdd: add } = processLine(line);
+                scoreAdd += add;
+                allMerges.push(...merges);
+
+                // Place results in new board
+                for (let j = 0; j < result.length; j++) {
+                    let row, col;
+                    if (direction === 'left') { row = i; col = j; }
+                    else if (direction === 'right') { row = i; col = 3-j; }
+                    else if (direction === 'up') { row = j; col = i; }
+                    else { row = 3-j; col = i; }
+                    
+                    const r = result[j];
+                    if (r) {
+                        if (r.row !== row || r.col !== col) moved = true;
+                        newBoard[row][col] = { value: r.value, tileId: r.tileId };
                     }
                 }
-                
-                newTiles.push(...processedTiles);
+            }
+
+            // Check if anything moved
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const old = board[row][col];
+                    const newCell = newBoard[row][col];
+                    if ((old && !newCell) || (!old && newCell) || 
+                        (old && newCell && old.tileId !== newCell.tileId)) {
+                        moved = true;
+                    }
+                }
             }
 
             if (!moved) return false;
 
-            // Update board and tiles
-            board = Array(4).fill(null).map(() => Array(4).fill(0));
-            newTiles.forEach(tile => {
-                board[tile.row][tile.col] = tile.value;
-            });
-            
-            // Keep merged tiles in tiles array temporarily so they animate
-            const allTiles = [...newTiles];
-            mergedTileIds.forEach(id => {
-                const mergedTile = tiles.find(t => t.id === id);
-                if (mergedTile) {
-                    // Find where this tile ends up (the tile it merged into)
-                    const targetTile = newTiles.find(t => t.mergedFrom && t.mergedFrom.includes(id));
-                    if (targetTile) {
-                        // Move merged tile to target position for animation
-                        allTiles.push({
-                            ...mergedTile,
-                            row: targetTile.row,
-                            col: targetTile.col,
-                            isNew: false,
-                            mergedFrom: null
-                        });
+            // Animate: move all tiles to new positions
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const cell = newBoard[row][col];
+                    if (cell) {
+                        const el = tileElements[cell.tileId];
+                        if (el) {
+                            updateTilePosition(el, row, col);
+                        }
                     }
                 }
+            }
+
+            // Animate merged tiles to destination then remove them
+            allMerges.forEach(merge => {
+                const sourceEl = tileElements[merge.sourceId];
+                if (sourceEl) {
+                    updateTilePosition(sourceEl, merge.toRow, merge.toCol);
+                }
             });
-            
-            tiles = allTiles;
-            
-            // Render with all tiles (including ones that will be removed)
-            updateScore();
-            renderTiles();
-            
-            // Remove merged tiles after animation
+
+            // After animation, update DOM
             setTimeout(() => {
-                tiles = newTiles; // Keep only the real tiles
-                removeMergedTiles(mergedTileIds);
+                // Remove merged source tiles
+                allMerges.forEach(merge => {
+                    const el = tileElements[merge.sourceId];
+                    if (el) {
+                        el.classList.add('removing');
+                        setTimeout(() => {
+                            if (el.parentNode) el.parentNode.removeChild(el);
+                        }, 150);
+                        delete tileElements[merge.sourceId];
+                    }
+                    // Update target tile to merged value
+                    const targetEl = tileElements[merge.targetId];
+                    if (targetEl) {
+                        targetEl.className = `tile tile-${merge.newValue} merged`;
+                        targetEl.textContent = merge.newValue;
+                        setTimeout(() => targetEl.classList.remove('merged'), 200);
+                        if (merge.newValue === 2048 && !hasWon) {
+                            targetEl.classList.add('pulse');
+                        }
+                    }
+                });
+
+                // Update board
+                board = newBoard;
+                score += scoreAdd;
+                updateScore();
+
+                if (scoreAdd > 0 && scoreAdd >= 2048 && !hasWon) {
+                    hasWon = true;
+                    showWin();
+                }
+
+                // Add new tile
+                addRandomTile();
+
+                // Check game over
+                if (!canMove()) {
+                    setTimeout(showGameOver, 300);
+                }
             }, 160);
-            
+
             return true;
         }
 
         function canMove() {
             for (let row = 0; row < 4; row++) {
                 for (let col = 0; col < 4; col++) {
-                    if (board[row][col] === 0) return true;
-                    if (col < 3 && board[row][col] === board[row][col + 1]) return true;
-                    if (row < 3 && board[row][col] === board[row + 1][col]) return true;
+                    if (!board[row][col]) return true;
+                    if (col < 3 && board[row][col] && board[row][col+1] && 
+                        board[row][col].value === board[row][col+1].value) return true;
+                    if (row < 3 && board[row][col] && board[row+1][col] && 
+                        board[row][col].value === board[row+1][col].value) return true;
                 }
             }
             return false;
@@ -653,20 +640,13 @@
         }
 
         function makeMove(direction) {
-            if (move(direction)) {
-                addRandomTile();
-                renderTiles();
-                if (!canMove()) {
-                    setTimeout(showGameOver, 300);
-                }
-            }
+            move(direction);
         }
 
         function newGame() {
             initBoard();
             addRandomTile();
             addRandomTile();
-            renderTiles();
         }
 
         document.addEventListener('keydown', (e) => {
