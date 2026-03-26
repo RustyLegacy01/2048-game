@@ -563,14 +563,11 @@
 
             // After animation, update DOM
             setTimeout(() => {
-                // Remove merged source tiles
+                // Remove merged source tiles immediately (no fade)
                 allMerges.forEach(merge => {
                     const el = tileElements[merge.sourceId];
                     if (el) {
-                        el.classList.add('removing');
-                        setTimeout(() => {
-                            if (el.parentNode) el.parentNode.removeChild(el);
-                        }, 150);
+                        if (el.parentNode) el.parentNode.removeChild(el);
                         delete tileElements[merge.sourceId];
                     }
                     // Update target tile to merged value
