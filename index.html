@@ -672,9 +672,11 @@
         async function loadLeaderboard() {
             try {
                 const response = await fetch('/api/leaderboard');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const scores = await response.json();
                 displayLeaderboard(scores);
             } catch (err) {
+                console.error('Leaderboard error:', err);
                 document.getElementById('leaderboard-list').innerHTML = '<li class="leaderboard-empty">Could not load leaderboard</li>';
             }
         }
@@ -719,16 +721,18 @@
             const name = document.getElementById('name-input').value.trim();
             if (!name) return;
             try {
-                await fetch('/api/score', {
+                const response = await fetch('/api/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, score: pendingScore })
                 });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 document.getElementById('name-modal').classList.remove('active');
                 document.getElementById('name-input').value = '';
                 loadLeaderboard();
             } catch (err) {
                 console.error('Error submitting score:', err);
+                alert('Failed to submit score. Please try again.');
             }
         }
 
