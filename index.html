@@ -22,14 +22,14 @@
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
-        .main-container {
+        .game-wrapper {
             display: flex;
             gap: 30px;
             align-items: flex-start;
             flex-wrap: wrap;
             justify-content: center;
         }
-        .game-section {
+        .game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -117,11 +117,15 @@
             transition: transform 0.15s ease-in-out;
             z-index: 10;
         }
-        .tile.new { animation: appear 0.2s ease-in-out; }
-        .tile.merged { animation: pop 0.2s ease-in-out; }
+        .tile.new {
+            animation: appear 0.2s ease-in-out;
+        }
+        .tile.merged {
+            animation: pop 0.2s ease-in-out;
+            z-index: 20;
+        }
         .tile.removing {
             animation: fade-out 0.15s ease-in-out forwards;
-            z-index: 5;
         }
         @keyframes appear {
             0% { opacity: 0; transform: scale(0); }
@@ -154,8 +158,11 @@
         }
         .overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(238, 228, 218, 0.9);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(238, 228, 218, 0.8);
             border-radius: 10px;
             display: flex;
             flex-direction: column;
@@ -166,8 +173,14 @@
             transition: all 0.3s ease;
             z-index: 100;
         }
-        .overlay.active { opacity: 1; visibility: visible; }
-        .overlay h2 { font-size: 48px; margin-bottom: 20px; }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .overlay h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
         .overlay.win h2 { color: #edc22e; }
         .overlay.lose h2 { color: #776e65; }
         .instructions {
@@ -178,63 +191,60 @@
         }
         .instructions strong { color: #776e65; }
         .leaderboard-section {
-            background: white;
+            background: #bbada0;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            min-width: 280px;
-            max-width: 320px;
+            min-width: 250px;
+            max-width: 300px;
         }
         .leaderboard-section h2 {
-            color: #776e65;
+            color: #f9f6f2;
             font-size: 24px;
             margin-bottom: 15px;
             text-align: center;
-            border-bottom: 2px solid #bbada0;
-            padding-bottom: 10px;
         }
-        .leaderboard-list { list-style: none; }
+        .leaderboard-list {
+            list-style: none;
+        }
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            border-bottom: 1px solid #eee;
-            transition: background 0.2s;
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            color: #f9f6f2;
         }
-        .leaderboard-item:hover { background: #f9f6f2; }
-        .leaderboard-item:last-child { border-bottom: none; }
+        .leaderboard-item.top-3 { background: rgba(237, 194, 46, 0.3); }
         .leaderboard-rank {
             font-weight: bold;
-            color: #8f7a66;
-            width: 30px;
+            font-size: 18px;
+            min-width: 30px;
         }
-        .leaderboard-rank.top3 { color: #edc22e; }
         .leaderboard-name {
             flex: 1;
-            color: #776e65;
+            text-align: left;
             padding: 0 10px;
-            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .leaderboard-score {
-            color: #8f7a66;
             font-weight: bold;
+            font-size: 18px;
         }
-        .leaderboard-empty {
+        .leaderboard-loading, .leaderboard-empty {
             text-align: center;
-            color: #999;
-            padding: 20px;
-            font-style: italic;
-        }
-        .leaderboard-loading {
-            text-align: center;
-            color: #8f7a66;
+            color: #eee4da;
             padding: 20px;
         }
         .modal {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -243,26 +253,28 @@
             transition: all 0.3s ease;
             z-index: 200;
         }
-        .modal.active { opacity: 1; visibility: visible; }
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
         .modal-content {
-            background: white;
+            background: #faf8ef;
             padding: 30px;
             border-radius: 10px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             max-width: 400px;
             width: 90%;
         }
         .modal-content h3 {
             color: #776e65;
-            margin-bottom: 10px;
             font-size: 28px;
+            margin-bottom: 10px;
         }
         .modal-content p {
             color: #8f7a66;
             margin-bottom: 20px;
         }
-        .modal-content .final-score {
+        .final-score {
             font-size: 48px;
             color: #edc22e;
             font-weight: bold;
@@ -273,13 +285,9 @@
             padding: 12px;
             font-size: 18px;
             border: 2px solid #bbada0;
-            border-radius: 6px;
-            margin-bottom: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
             text-align: center;
-        }
-        .name-input:focus {
-            outline: none;
-            border-color: #8f7a66;
         }
         .modal-buttons {
             display: flex;
@@ -291,33 +299,26 @@
             font-size: 16px;
             font-weight: bold;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.2s;
         }
         .modal-btn.primary {
             background: #8f7a66;
-            color: white;
+            color: #f9f6f2;
         }
         .modal-btn.primary:hover { background: #9f8a76; }
         .modal-btn.secondary {
             background: #bbada0;
-            color: white;
+            color: #f9f6f2;
         }
-        .modal-btn.secondary:hover { background: #a89988; }
-        @media (max-width: 800px) {
-            .main-container { flex-direction: column; }
-            .leaderboard-section {
-                width: 100%;
-                max-width: 440px;
-            }
-        }
+        .modal-btn.secondary:hover { background: #c5b5a8; }
     </style>
 </head>
 <body>
     <h1>2048</h1>
-    <div class="main-container">
-        <div class="game-section">
+    <div class="game-wrapper">
+        <div class="game-container">
             <div class="score-container">
                 <div class="score-box">
                     <div class="label">Score</div>
@@ -367,13 +368,14 @@
         </div>
     </div>
     <script>
+        // Game state
         let board = [];
         let score = 0;
         let bestScore = localStorage.getItem('bestScore') || 0;
         let hasWon = false;
         let tileIdCounter = 0;
-        let tiles = [];
-        let tileElements = new Map();
+        let tiles = []; // Array of {id, value, row, col, merged, isNew}
+        let tileElements = new Map(); // id -> DOM element
         let isAnimating = false;
         let pendingScore = null;
 
@@ -386,15 +388,13 @@
             hasWon = false;
             tileIdCounter = 0;
             tiles = [];
-            tileElements.clear();
             updateScore();
             hideOverlay();
             clearTileContainer();
         }
 
         function clearTileContainer() {
-            const container = document.getElementById('tile-container');
-            container.innerHTML = '';
+            document.getElementById('tile-container').innerHTML = '';
             tileElements.clear();
         }
 
@@ -413,12 +413,14 @@
 
         function createTileElement(tile) {
             const el = document.createElement('div');
-            el.className = `tile tile-${tile.value} new`;
+            el.className = `tile tile-${tile.value} ${tile.isNew ? 'new' : ''}`;
             el.textContent = tile.value;
             el.id = `tile-${tile.id}`;
             const pos = getTilePosition(tile.row, tile.col);
             el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-            setTimeout(() => { el.classList.remove('new'); }, 200);
+            if (tile.isNew) {
+                setTimeout(() => el.classList.remove('new'), 200);
+            }
             return el;
         }
 
@@ -426,19 +428,20 @@
             const pos = getTilePosition(tile.row, tile.col);
             el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
             el.className = `tile tile-${tile.value}`;
-            if (tile.value === 2048 && !hasWon) el.classList.add('pulse');
+            if (tile.value === 2048) el.classList.add('pulse');
             el.textContent = tile.value;
             if (tile.merged) {
                 el.classList.add('merged');
-                setTimeout(() => { el.classList.remove('merged'); }, 200);
+                setTimeout(() => el.classList.remove('merged'), 200);
             }
         }
 
-        function renderTiles() {
+        function renderTiles(removedTileIds = []) {
             const container = document.getElementById('tile-container');
-            const currentIds = new Set();
+            const currentIds = new Set(tiles.map(t => t.id));
+            
+            // Update or create tiles
             tiles.forEach(tile => {
-                currentIds.add(tile.id);
                 let el = tileElements.get(tile.id);
                 if (!el) {
                     el = createTileElement(tile);
@@ -448,10 +451,15 @@
                     updateTileElement(tile, el);
                 }
             });
-            tileElements.forEach((el, id) => {
-                if (!currentIds.has(id)) {
+            
+            // Remove tiles that are gone
+            removedTileIds.forEach(id => {
+                const el = tileElements.get(id);
+                if (el) {
                     el.classList.add('removing');
-                    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 150);
+                    setTimeout(() => {
+                        if (el.parentNode) el.parentNode.removeChild(el);
+                    }, 150);
                     tileElements.delete(id);
                 }
             });
@@ -465,205 +473,113 @@
                 }
             }
             if (emptyCells.length > 0) {
-                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 const value = Math.random() < 0.9 ? 2 : 4;
-                board[randomCell.row][randomCell.col] = value;
+                board[cell.row][cell.col] = value;
                 const newTile = {
                     id: tileIdCounter++,
                     value: value,
-                    row: randomCell.row,
-                    col: randomCell.col,
+                    row: cell.row,
+                    col: cell.col,
                     isNew: true,
                     merged: false
                 };
                 tiles.push(newTile);
-                const container = document.getElementById('tile-container');
-                const el = createTileElement(newTile);
-                container.appendChild(el);
-                tileElements.set(newTile.id, el);
+                renderTiles();
             }
         }
 
-        function slideRowLeft(row) {
-            let newRow = row.filter(val => val !== 0);
-            let merged = Array(newRow.length).fill(false);
-            let mergeInfo = [];
-            for (let i = 0; i < newRow.length - 1; i++) {
-                if (newRow[i] === newRow[i + 1] && !merged[i]) {
-                    newRow[i] *= 2;
-                    score += newRow[i];
-                    newRow[i + 1] = 0;
-                    merged[i] = true;
-                    mergeInfo.push({pos: i, value: newRow[i]});
-                    if (newRow[i] === 2048 && !hasWon) {
-                        hasWon = true;
-                        setTimeout(showWin, 300);
-                    }
-                }
-            }
-            newRow = newRow.filter(val => val !== 0);
-            while (newRow.length < 4) newRow.push(0);
-            return { row: newRow, mergeInfo };
-        }
-
-        function moveLeft() {
-            let moved = false;
+        // Move logic with proper tile tracking
+        function move(direction) {
+            if (isAnimating) return false;
+            
+            const oldBoard = board.map(row => [...row]);
+            const removedTileIds = [];
             const newTiles = [];
-            const mergedTileIds = new Set();
-            for (let row = 0; row < 4; row++) {
-                const result = slideRowLeft(board[row]);
-                const newRow = result.row;
-                if (JSON.stringify(newRow) !== JSON.stringify(board[row])) moved = true;
-                for (let col = 0; col < 4; col++) {
-                    if (newRow[col] !== 0) {
-                        const targetValue = newRow[col];
-                        const candidates = tiles.filter(t => 
-                            t.row === row && 
-                            !newTiles.some(nt => nt.id === t.id) &&
-                            !mergedTileIds.has(t.id)
-                        );
-                        let bestTile = null;
-                        for (let t of candidates) {
-                            if (t.value === targetValue) {
-                                const wasMerged = result.mergeInfo.some(m => m.pos === col && m.value === targetValue);
-                                if (!wasMerged || !bestTile) {
-                                    bestTile = t;
-                                    if (wasMerged) {
-                                        const partner = candidates.find(c => c.id !== t.id && c.value === targetValue / 2 && c.col < t.col);
-                                        if (partner) mergedTileIds.add(partner.id);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (bestTile) {
-                            newTiles.push({
-                                id: bestTile.id,
-                                value: targetValue,
-                                row: row,
-                                col: col,
-                                isNew: false,
-                                merged: result.mergeInfo.some(m => m.pos === col && m.value === targetValue)
-                            });
-                        } else {
-                            newTiles.push({
-                                id: tileIdCounter++,
-                                value: targetValue,
-                                row: row,
-                                col: col,
-                                isNew: false,
-                                merged: false
-                            });
-                        }
-                    }
-                }
-                board[row] = newRow;
-            }
-            if (moved) tiles = newTiles;
-            return moved;
-        }
-
-        function moveRight() {
             let moved = false;
-            const newTiles = [];
-            for (let row = 0; row < 4; row++) {
-                const reversed = [...board[row]].reverse();
-                const result = slideRowLeft(reversed);
-                const newRow = result.row.reverse();
-                if (JSON.stringify(newRow) !== JSON.stringify(board[row])) moved = true;
-                for (let col = 0; col < 4; col++) {
-                    if (newRow[col] !== 0) {
-                        const targetValue = newRow[col];
-                        const originalCol = 3 - col;
-                        const tile = tiles.find(t => 
-                            t.row === row && 
-                            t.value === targetValue &&
-                            !newTiles.some(nt => nt.id === t.id)
-                        );
+
+            // Process each line based on direction
+            for (let i = 0; i < 4; i++) {
+                let line = [];
+                let positions = []; // Track where each tile ends up
+                
+                // Extract line
+                for (let j = 0; j < 4; j++) {
+                    let row, col;
+                    if (direction === 'left') { row = i; col = j; }
+                    else if (direction === 'right') { row = i; col = 3 - j; }
+                    else if (direction === 'up') { row = j; col = i; }
+                    else { row = 3 - j; col = i; }
+                    
+                    if (board[row][col] !== 0) {
+                        // Find the tile at this position
+                        const tile = tiles.find(t => t.row === row && t.col === col && !removedTileIds.includes(t.id));
                         if (tile) {
-                            newTiles.push({
-                                id: tile.id,
-                                value: targetValue,
-                                row: row,
-                                col: col,
-                                isNew: false,
-                                merged: result.mergeInfo.some(m => m.pos === originalCol && m.value === targetValue)
-                            });
+                            line.push({ ...tile, originalRow: row, originalCol: col });
                         }
                     }
                 }
-                board[row] = newRow;
-            }
-            if (moved) tiles = newTiles;
-            return moved;
-        }
 
-        function moveUp() {
-            let moved = false;
-            const newTiles = [];
-            for (let col = 0; col < 4; col++) {
-                const column = [board[0][col], board[1][col], board[2][col], board[3][col]];
-                const result = slideRowLeft(column);
-                const newColumn = result.row;
-                for (let row = 0; row < 4; row++) {
-                    if (board[row][col] !== newColumn[row]) moved = true;
-                    board[row][col] = newColumn[row];
-                    if (newColumn[row] !== 0) {
-                        const targetValue = newColumn[row];
-                        const tile = tiles.find(t => 
-                            t.col === col && 
-                            t.value === targetValue &&
-                            !newTiles.some(nt => nt.id === t.id)
-                        );
-                        if (tile) {
-                            newTiles.push({
-                                id: tile.id,
-                                value: targetValue,
-                                row: row,
-                                col: col,
-                                isNew: false,
-                                merged: result.mergeInfo.some(m => m.pos === row && m.value === targetValue)
-                            });
+                // Merge tiles
+                let mergedLine = [];
+                for (let k = 0; k < line.length; k++) {
+                    if (k < line.length - 1 && line[k].value === line[k + 1].value) {
+                        // Merge these two
+                        const mergedValue = line[k].value * 2;
+                        mergedLine.push({
+                            ...line[k],
+                            value: mergedValue,
+                            merged: true,
+                            mergedFrom: line[k + 1].id
+                        });
+                        removedTileIds.push(line[k + 1].id);
+                        score += mergedValue;
+                        if (mergedValue === 2048 && !hasWon) {
+                            hasWon = true;
+                            setTimeout(showWin, 300);
                         }
+                        k++; // Skip next
+                    } else {
+                        mergedLine.push(line[k]);
                     }
                 }
-            }
-            if (moved) tiles = newTiles;
-            return moved;
-        }
 
-        function moveDown() {
-            let moved = false;
-            const newTiles = [];
-            for (let col = 0; col < 4; col++) {
-                const column = [board[0][col], board[1][col], board[2][col], board[3][col]];
-                const result = slideRowLeft(column.reverse());
-                const newColumn = result.row.reverse();
-                for (let row = 0; row < 4; row++) {
-                    if (board[row][col] !== newColumn[row]) moved = true;
-                    board[row][col] = newColumn[row];
-                    if (newColumn[row] !== 0) {
-                        const targetValue = newColumn[row];
-                        const tile = tiles.find(t => 
-                            t.col === col && 
-                            t.value === targetValue &&
-                            !newTiles.some(nt => nt.id === t.id)
-                        );
-                        if (tile) {
-                            newTiles.push({
-                                id: tile.id,
-                                value: targetValue,
-                                row: row,
-                                col: col,
-                                isNew: false,
-                                merged: result.mergeInfo.some(m => m.pos === (3 - row) && m.value === targetValue)
-                            });
-                        }
+                // Pad with zeros
+                while (mergedLine.length < 4) {
+                    mergedLine.push(null);
+                }
+
+                // Place tiles in new positions
+                for (let j = 0; j < 4; j++) {
+                    let row, col;
+                    if (direction === 'left') { row = i; col = j; }
+                    else if (direction === 'right') { row = i; col = 3 - j; }
+                    else if (direction === 'up') { row = j; col = i; }
+                    else { row = 3 - j; col = i; }
+
+                    const tile = mergedLine[j];
+                    if (tile) {
+                        if (tile.row !== row || tile.col !== col) moved = true;
+                        tile.row = row;
+                        tile.col = col;
+                        tile.isNew = false;
+                        newTiles.push(tile);
                     }
                 }
             }
-            if (moved) tiles = newTiles;
-            return moved;
+
+            if (!moved) return false;
+
+            // Update board
+            board = Array(4).fill(null).map(() => Array(4).fill(0));
+            newTiles.forEach(tile => {
+                board[tile.row][tile.col] = tile.value;
+            });
+
+            tiles = newTiles;
+            updateScore();
+            renderTiles(removedTileIds);
+            return true;
         }
 
         function canMove() {
@@ -689,32 +605,19 @@
             const message = document.getElementById('overlay-message');
             overlay.className = 'overlay active lose';
             message.textContent = 'Game Over!';
-            checkHighScore(score);
+            checkHighScore();
         }
 
         function hideOverlay() {
-            const overlay = document.getElementById('overlay');
-            overlay.className = 'overlay';
+            document.getElementById('overlay').className = 'overlay';
         }
 
         function makeMove(direction) {
-            if (isAnimating) return;
-            let moved = false;
-            switch(direction) {
-                case 'left': moved = moveLeft(); break;
-                case 'right': moved = moveRight(); break;
-                case 'up': moved = moveUp(); break;
-                case 'down': moved = moveDown(); break;
-            }
-            if (moved) {
-                isAnimating = true;
-                renderTiles();
-                updateScore();
-                setTimeout(() => {
-                    addRandomTile();
-                    if (!canMove()) setTimeout(showGameOver, 300);
-                    isAnimating = false;
-                }, 150);
+            if (move(direction)) {
+                addRandomTile();
+                if (!canMove()) {
+                    setTimeout(showGameOver, 300);
+                }
             }
         }
 
@@ -722,8 +625,6 @@
             initBoard();
             addRandomTile();
             addRandomTile();
-            renderTiles();
-            hideNameModal();
         }
 
         document.addEventListener('keydown', (e) => {
@@ -735,28 +636,26 @@
             }
         });
 
+        // Leaderboard functions
         async function loadLeaderboard() {
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = '<li class="leaderboard-loading">Loading...</li>';
             try {
                 const response = await fetch('/api/leaderboard');
                 const scores = await response.json();
                 displayLeaderboard(scores);
-            } catch (error) {
-                console.error('Error loading leaderboard:', error);
-                list.innerHTML = '<li class="leaderboard-empty">Failed to load leaderboard</li>';
+            } catch (err) {
+                document.getElementById('leaderboard-list').innerHTML = '<li class="leaderboard-empty">Could not load leaderboard</li>';
             }
         }
 
         function displayLeaderboard(scores) {
             const list = document.getElementById('leaderboard-list');
             if (scores.length === 0) {
-                list.innerHTML = '<li class="leaderboard-empty">No scores yet. Be the first!</li>';
+                list.innerHTML = '<li class="leaderboard-empty">No scores yet!</li>';
                 return;
             }
             list.innerHTML = scores.map((entry, index) => `
-                <li class="leaderboard-item">
-                    <span class="leaderboard-rank ${index < 3 ? 'top3' : ''}">${index + 1}.</span>
+                <li class="leaderboard-item ${index < 3 ? 'top-3' : ''}">
+                    <span class="leaderboard-rank">#${index + 1}</span>
                     <span class="leaderboard-name">${escapeHtml(entry.name)}</span>
                     <span class="leaderboard-score">${entry.score}</span>
                 </li>
@@ -769,69 +668,48 @@
             return div.innerHTML;
         }
 
-        async function checkHighScore(score) {
+        async function checkHighScore() {
             try {
                 const response = await fetch(`/api/leaderboard/is-highscore/${score}`);
-                const data = await response.json();
-                if (data.isHighScore) {
+                const { isHighScore } = await response.json();
+                if (isHighScore) {
                     pendingScore = score;
-                    showNameModal(score);
+                    document.getElementById('final-score').textContent = score;
+                    document.getElementById('name-modal').classList.add('active');
+                    document.getElementById('name-input').focus();
                 }
-            } catch (error) {
-                console.error('Error checking high score:', error);
+            } catch (err) {
+                console.error('Error checking high score:', err);
             }
-        }
-
-        function showNameModal(score) {
-            document.getElementById('final-score').textContent = score;
-            document.getElementById('name-modal').classList.add('active');
-            document.getElementById('name-input').focus();
-        }
-
-        function hideNameModal() {
-            document.getElementById('name-modal').classList.remove('active');
-            document.getElementById('name-input').value = '';
-            pendingScore = null;
         }
 
         async function submitScore() {
-            const nameInput = document.getElementById('name-input');
-            const name = nameInput.value.trim();
-            if (!name) {
-                alert('Please enter your name');
-                return;
-            }
+            const name = document.getElementById('name-input').value.trim();
+            if (!name) return;
             try {
-                const response = await fetch('/api/score', {
+                await fetch('/api/score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: name,
-                        score: pendingScore,
-                        date: new Date().toISOString()
-                    })
+                    body: JSON.stringify({ name, score: pendingScore })
                 });
-                const data = await response.json();
-                if (data.success) {
-                    hideNameModal();
-                    loadLeaderboard();
-                } else {
-                    alert('Failed to submit score. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error submitting score:', error);
-                alert('Failed to submit score. Please try again.');
+                document.getElementById('name-modal').classList.remove('active');
+                document.getElementById('name-input').value = '';
+                loadLeaderboard();
+            } catch (err) {
+                console.error('Error submitting score:', err);
             }
         }
 
         function skipSubmit() {
-            hideNameModal();
+            document.getElementById('name-modal').classList.remove('active');
+            document.getElementById('name-input').value = '';
         }
 
         document.getElementById('name-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') submitScore();
         });
 
+        // Start game
         newGame();
     </script>
 </body>
