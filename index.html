@@ -478,6 +478,9 @@
         }
 
         function move(direction) {
+            if (isAnimating) return false;
+            isAnimating = true;
+            
             const newBoard = Array(4).fill(null).map(() => Array(4).fill(null));
             const allMerges = [];
             let moved = false;
@@ -594,6 +597,8 @@
                 if (!canMove()) {
                     setTimeout(showGameOver, 300);
                 }
+                
+                isAnimating = false;
             }, 160);
 
             return true;
