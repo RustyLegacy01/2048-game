@@ -121,7 +121,6 @@
             animation: fade-in-scale 0.2s ease-in-out;
         }
         .tile.merged {
-            animation: pop 0.2s ease-in-out;
             z-index: 20;
         }
         .tile.removing {
@@ -132,11 +131,7 @@
             0% { opacity: 0; }
             50% { opacity: 1; }
         }
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
+
         .tile-2 { background: #eee4da; color: #776e65; }
         .tile-4 { background: #ede0c8; color: #776e65; }
         .tile-8 { background: #f2b179; color: #f9f6f2; }
