@@ -12,8 +12,8 @@ RUN npm ci --only=production
 # Copy application files
 COPY . .
 
-# Create scores file if it doesn't exist
-RUN touch scores.json
+# Create data directory for scores
+RUN mkdir -p /app/data && touch /app/data/scores.json
 
 # Expose the port
 EXPOSE 8989

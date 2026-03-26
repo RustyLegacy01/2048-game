@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8989;
-const SCORES_FILE = path.join(__dirname, 'scores.json');
+const SCORES_FILE = process.env.SCORES_FILE || path.join(__dirname, 'scores.json');
 
 // Middleware
 app.use(cors());

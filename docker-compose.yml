@@ -6,7 +6,11 @@ services:
     ports:
       - "8989:8989"
     volumes:
-      - ./scores.json:/app/scores.json
+      - scores-data:/app/data
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - SCORES_FILE=/app/data/scores.json
+
+volumes:
+  scores-data:
