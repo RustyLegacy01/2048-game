@@ -369,6 +369,9 @@
         
         // Tile elements in DOM - keyed by tileId
         let tileElements = {};
+        
+        // Animation lock
+        let isAnimating = false;
 
         document.getElementById('best-score').textContent = bestScore;
         loadLeaderboard();
