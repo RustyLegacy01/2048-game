@@ -484,6 +484,11 @@
             if (isAnimating) return false;
             isAnimating = true;
             
+            // Always reset the lock after animation time, even if something breaks
+            const animationTimeout = setTimeout(() => {
+                isAnimating = false;
+            }, 200);
+            
             const newBoard = Array(4).fill(null).map(() => Array(4).fill(null));
             const allMerges = [];
             let moved = false;
@@ -601,6 +606,7 @@
                     setTimeout(showGameOver, 300);
                 }
                 
+                clearTimeout(animationTimeout);
                 isAnimating = false;
             }, 160);
 
